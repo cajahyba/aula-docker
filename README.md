@@ -6,138 +6,209 @@ Esse projeto objetiva ajudar no processo de configuração do ambiente de desenv
 
 ## Instalação da base para Trabalho
 
-    sudo apt-get install git build-essential
+```
+$ sudo apt-get install git build-essential
+```
 
 ## Instalação do Docker
 
 Como o docker de sua distribuição pode estar restrito a uma versão antiga devido à politica de atualização da mesma (e.g. Ubuntu 16.04), vamos atualizar o repositório para que o mesmo aponte para a versão do docker mais recente.
+```
+$ sudo apt-get -y install curl apt-transport-https ca-certificates software-properties-common
 
-    sudo apt-get -y install curl apt-transport-https ca-certificates software-properties-common
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+$ sudo apt-get update
 
-    sudo apt-get update
-
-    sudo apt-get install docker-compose docker docker-ce
-
+$ sudo apt-get install docker-compose docker docker-ce
+```
 
 ## Executando o docker sem sudo
 
 Para evitar que você tenha que utilizar o comando sudo toda a vez que deseje rodar o docker, vamos adicionar seu usuário ao grupo que tem permissão de execução: 
+```
+$ sudo groupadd docker
 
-    sudo groupadd docker
-
-    sudo usermod -aG docker $USER
-
+$ sudo usermod -aG docker $USER
+```
 
 ## Verificando se tudo correu bem com o Grupo
 
 Para que as permissões sejam efetivamente aplicadas, você deve deslogar do sistema e logar novamente. Uma outra possibilidade é forçar essa atualização rodando: 
 
-    su - ${USER}
+
+    $ su - ${USER}
 
 Sua senha de acesso será solicitada. Você pode verificar se o seu usuário foi corretamente adicionado ao grupo "docker", basta digitar:
 
-    id -nG
+
+    $ id -nG
+
 
 Para saber se tudo está funcionando, rode o comando abaixo sem utilizar "sudo":
 
-    docker run hello-world
-
+    $ docker run hello-world
+`
 
 
 ## Testando a instalação
 
 Para verificar a versão corrente do docker:
 
-    docker --version
+
+    $ docker --version
+
 
 Para mais informações sobre a instalação:
 
-    docker info
+
+    $ docker info
 
 
 ## Executando o Hello World
 
 O comando abaixo irá baixar a imagem do hello-world:
 
-    docker run hello-world
+
+    $ docker run hello-world
+
 
 
 Para listar as imagens existentes:
 
-    docker image ls
+    $ docker image ls
+
 
 
 ## List de Docker CLI commands
 
-    docker
-    docker container --help
+
+    $ docker
+    $ docker container --help
+
 
 ## Display Docker version and info
-    
-    docker --version
-    docker version
-    docker info
+
+    $ docker --version
+    $ docker version
+    $ docker info
+
 
 ## Execute Docker image
-    
-    docker run hello-world
+
+    $ docker run hello-world
+
 
 ## List Docker images
     
-    docker image ls
+
+    $ docker image ls
+
 
 ## List Docker containers (running, all, all in quiet mode)
-    
-    docker container ls
-    docker container ls --all
-    docker container ls -aq
+
+
+    $ docker container ls
+    $ docker container ls --all
+    $ docker container ls -aq
+
+
+## Definindo o Dockerfile
+
+Crie um arquivo chamado Dockerfile e adicione o seguinte conteúdo a ele:
+
+```docker
+    # Use an official Python runtime as a parent image
+    FROM python:2.7-slim
+
+    # Set the working directory to /app
+    WORKDIR /app
+
+    # Copy the current directory contents into the container at /app
+    COPY . /app
+
+    # Install any needed packages specified in requirements.txt
+    RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+    # Make port 80 available to the world outside this container
+    EXPOSE 80
+
+    # Define environment variable
+    ENV NAME World
+
+    # Run app.py when the container launches
+    CMD ["python", "app.py"]
+```
+
+## Criando arquivos de apoio desse exemplo
+
+Crie dois arquivos: requirements.txt e app.py e os coloque no mesmo diretório onde está o Dockerfile. Quando nosso Dockerfile for utilizado para construir uma imagem, esses dois arquivos irão levantar nossa aplicação de exemplo.
+
+Altere o conteúdo dos arquivos e coloque:
+
+### app.py
+```python
+    from flask import Flask
+    from redis import Redis, RedisError
+    import os
+    import socket
+
+    # Connect to Redis
+    redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def hello():
+        try:
+            visits = redis.incr("counter")
+        except RedisError:
+            visits = "<i>cannot connect to Redis, counter disabled</i>"
+
+        html = "<h3>Hello {name}!</h3>" \
+            "<b>Hostname:</b> {hostname}<br/>" \
+            "<b>Visits:</b> {visits}"
+        return html.format(name=os.getenv("NAME", "world"), hostname=socket.gethostname(), visits=visits)
+
+    if __name__ == "__main__":
+        app.run(host='0.0.0.0', port=80)
+```
+
+### requirenments.txt
+
+    Flask
+    Redis
 
 
 
 ## Build da imagem
 
-Após a instalação do Docker, copie a pasta Drive_Downloads disponível em um dos HDs externos e cole na pasta NVIDIA existente no diretório que você clonou o repositório. Posteriormente, rode o script:
-
-    ./build_driveworks.sh
+Agora que estamos prontos para construirmos nossa imagem, rode o seguinte comando dentro do diretório onde está o Dockerfile:
 
 
-# Acessando a máquina
-
-Para acessar o ambiente criado, basta rodar o script abaixo:
-
-    ./access_driveworks.sh
+    $ docker build -t auladocker .
 
 
-<!-- # Instalação do Nvidia-Docker (opcional)
+## Rodando a aplicação
 
-### If you have nvidia-docker 1.0 installed: we need to remove it and all existing GPU containers:
 
-    docker volume ls -q -f driver=nvidia-docker | xargs -r -I{} -n1 docker ps -q -a -f volume={} | xargs -r docker rm -f
+    $ docker run -p 4000:80 auladocker
 
-    sudo apt-get purge -y nvidia-docker
 
-### Add the package repositories
+## Vendo os containers que estão rodando e controlando a execução
 
-    curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+Para parar a execução você pode dar CTRL+C no terminal onde você rodou o comando de execução ou utilizar o comando Stop do Docker, mas, para isso, você precisa do CONTAINER ID. Abra outro terminal e digite:
 
-    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-
-    curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-
-    sudo apt-get update
-
-### Install nvidia-docker2 and reload the Docker daemon configuration
+    $ docker container ls
     
-    sudo apt-get install -y nvidia-docker2
-    
-    sudo pkill -SIGHUP dockerd
+    CONTAINER ID        IMAGE               COMMAND             CREATED
+    1fa4ab2cf395        auladocker       "python app.py"     28 seconds ago
 
-### Test nvidia-smi with the latest official CUDA image
+    $ docker container stop 1fa4ab2cf395
 
-    docker run --runtime=nvidia --rm nvidia/cuda nvidia-smi -->
+
+
 
 
