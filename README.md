@@ -176,7 +176,7 @@ Altere o conteúdo dos arquivos e coloque:
         app.run(host='0.0.0.0', port=80)
 ```
 
-### requirenments.txt
+### requirements.txt
 
     Flask
     Redis
