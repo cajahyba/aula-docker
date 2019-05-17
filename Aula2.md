@@ -6,7 +6,7 @@ Para demonstrar a portabilidade do que criamos na aula passada, vamos carregar n
 
 Um registro é uma coleção de repositórios e este é uma coleção de imagens — uma espécie de repositório como o GitHub, exceto que o código já foi criado. Uma conta em um registro pode criar muitos repositórios. A CLI do Docker usa o registro público do Docker por padrão.
 
-    Nota: usamos o registro público do Docker aqui apenas porque ele é gratuito e pré-configurado, mas há muitos públicos para escolher e você pode até mesmo configurar seu próprio registro privado usando o Docker Trusted Registry.
+**Nota: usamos o registro público do Docker aqui apenas porque ele é gratuito e pré-configurado, mas há muitos públicos para escolher e você pode até mesmo configurar seu próprio registro privado usando o Docker Trusted Registry.**
 
 
 ## Faça login com sua ID do Docker
@@ -151,7 +151,7 @@ version: "3"
 services:
   web:
     # replace username/repo:tag with your name and image details
-    image: username/repo:tag ## e.g. image: cajahyba/auladocker:latest 
+    image: username/repo:tag ## e.g. image: cajahyba/auladocker:aula2 
     deploy:
       replicas: 5
       resources:
@@ -168,3 +168,112 @@ networks:
   webnet:
 ```
 
+Esse arquivo docker-compose.yml diz ao Docker para fazer o seguinte:
+
+* Puxe a imagem que nós subimos para o registro.
+
+* Executar 5 instâncias dessa imagem como um serviço chamado Web, limitando cada um para usar, no máximo, 10% de um único núcleo de tempo de CPU (isso também poderia ser, por exemplo, "1.5" para significar 1 e meio núcleo para cada), e 50MB de RAM.
+
+* Reinicie imediatamente os recipientes se um falhar.
+
+* Mapeie a porta 4000 no host para a porta da Web 80.
+
+* Instrua os contêineres Web para compartilhar a porta 80 por meio de uma rede com balanceamento de carga chamada Webnet. (Internamente, os próprios contêineres publicam na porta da Web 80 em uma porta efêmera.)
+
+* Defina a rede Webnet com as configurações padrão (que é uma rede de sobreposição com balanceamento de carga).
+
+
+## Executando nosso novo balanceador de carga
+
+Antes de usarmos o comando "docker stack deploy", precisamos executar o seguinte comando abaixo:
+
+    $ docker swarm init
+    Swarm initialized: current node (lzx0kievd2wdn3j5t9yacmx47) is now a manager.
+
+    To add a worker to this swarm, run the following command:
+
+        docker swarm join --token SWMTKN-1-1t8veonmo8w17ua667p65dpmi45qlonyzxpih3mk4fno2m4dgf-bizim15dywvd8fdaewgsxq64i 192.168.87.20:2377
+
+    To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+
+
+**Nota: Nós aprenderemos mais sobre esse comando em uma aula futura. Apenas saiba que se você não executar "docker swarm init" você receberá um erro que "“this node is not a swarm manager.”**
+
+Agora vamos executá-lo. Você precisa dar um nome ao seu aplicativo. Aqui, ele está definido para laboratorio-docker:
+
+    $ docker stack deploy -c docker-compose.yml laboratorio-docker
+    Creating network laboratorio-docker_webnet
+    Creating service laboratorio-docker_web
+
+
+Pronto, nosso service stack está está executando 5 instâncias de contêiner de nossa imagem implantada em um host. Vamos investigar. 
+
+Vamos obter o Service ID referente ao serviço em nossa aplicação:
+
+    $ docker service ls
+
+Procure a saída para o serviço Web, anexado com o nome do aplicativo. Se você nomeou o mesmo como mostrado neste exemplo, o nome é laboratorio-docker_web. O ID de serviço também é listado, juntamente com o número de réplicas, o nome da imagem e as portas expostas.
+
+Como alternativa, você pode executar os serviços de pilha do Docker, seguidos pelo nome da pilha. O comando de exemplo a seguir permite exibir todos os serviços associados à pilha laboratoriodocker:
+    
+    ID                  NAME                     MODE                REPLICAS            IMAGE                       PORTS
+    5a6qvora0joi        laboratorio-docker_web   replicated          5/5                 cajahyba/auladocker:aula2   *:4000->80/tcp
+
+
+Um único contêiner em execução em um serviço é chamado de uma tarefa. As tarefas recebem IDs exclusivas que incrementam numericamente, até o número de réplicas definidas no arquivo docker-compose.yml. Para listar as tarefas do seu serviço:
+
+    $ docker service ps laboratorio-docker_web
+    ID                  NAME                       IMAGE                       NODE                DESIRED STATE       CURRENT STATE            ERROR               PORTS
+    wxq4m0zt354x        laboratorio-docker_web.1   cajahyba/auladocker:aula2   cajah-note          Running             Running 14 minutes ago                       
+    26s0woctmgvt        laboratorio-docker_web.2   cajahyba/auladocker:aula2   cajah-note          Running             Running 14 minutes ago                       
+    677kwdi7tgly        laboratorio-docker_web.3   cajahyba/auladocker:aula2   cajah-note          Running             Running 14 minutes ago                       
+    upvbzcqk68x4        laboratorio-docker_web.4   cajahyba/auladocker:aula2   cajah-note          Running             Running 14 minutes ago                       
+    35szddi1xgn4        laboratorio-docker_web.5   cajahyba/auladocker:aula2   cajah-note          Running             Running 14 minutes ago 
+
+As tarefas (Tasks) também são demonstradas se você listar todos os contêineres no seu sistema, embora isso não permita filtro por serviço:
+
+    $ docker container ls -q
+    a38ae8683dda
+    e321a1a00cbd
+    c289d334bd36
+    16e0effebb09
+    f96956363963
+
+Você pode acessar http://localhost:4000 várias vezes seguidas e ver se o tudo está funcionando corretamente.
+
+
+De qualquer forma, o ID do contêiner é alterado, demonstrando o balanceamento de carga; com cada pedido, uma das 5 tarefas é escolhida, em uma forma Round-Robin, para responder. Os IDs de contêiner correspondem à saída do comando anterior (docker container ls -q).
+
+Para exibir todas as tarefas de uma pilha (stack), você pode executar o "docker stack ps " seguido pelo nome do aplicativo, conforme mostrado no exemplo a seguir:
+
+    $ docker stack ps laboratorio-docker
+    ID                  NAME                       IMAGE                       NODE                DESIRED STATE       CURRENT STATE            ERROR               PORTS
+    wxq4m0zt354x        laboratorio-docker_web.1   cajahyba/auladocker:aula2   cajah-note          Running             Running 25 minutes ago                       
+    26s0woctmgvt        laboratorio-docker_web.2   cajahyba/auladocker:aula2   cajah-note          Running             Running 25 minutes ago                       
+    677kwdi7tgly        laboratorio-docker_web.3   cajahyba/auladocker:aula2   cajah-note          Running             Running 25 minutes ago                       
+    upvbzcqk68x4        laboratorio-docker_web.4   cajahyba/auladocker:aula2   cajah-note          Running             Running 25 minutes ago                       
+    35szddi1xgn4        laboratorio-docker_web.5   cajahyba/auladocker:aula2   cajah-note          Running             Running 25 minutes ago    
+        
+## Escalonando a aplicação
+
+Você pode dimensionar o aplicativo alterando o valor da variável *replicas* no docker-compose.yml, salvando a alteração e reexecutando o comando Docker Stack Deploy:
+
+    $ docker stack deploy -c docker-compose.yml laboratorio-docker
+
+O Docker executa uma atualização in-loco (in-place update), não há necessidade de destruir todo o stack primeiro ou matar todos os contêineres.
+
+Agora, execute novamente o comando *docker container ls -q* para ver se as instâncias implantadas foram reconfiguradas. Se você ampliou as réplicas, mais tarefas e, portanto, mais contêineres, são iniciados.
+
+## Destruindo tudo
+
+Para derrubar a aplicação basta você executar:
+
+    $ docker stack rm laboratorio-docker
+
+Para derrubar o swarm:
+
+    $ docker swarm leave --force
+
+Assim, é possível perceber o quão fácil é levantar e dimensionar seu aplicativo com o Docker. Você tomou um grande passo para aprender a executar contêineres em produção. Em seguida, você aprenderá a executar este aplicativo como um enxame de bonafide em um cluster de máquinas do Docker.
+
+**Nota: arquivos do Compose são usados para definir aplicativos no Docker e podem ser carregados para provedores de nuvem usando o Docker Cloud ou em qualquer provedor de hardware ou nuvem**
