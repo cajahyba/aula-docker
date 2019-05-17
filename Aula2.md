@@ -35,7 +35,7 @@ Vamos ver como ficou:
 
     REPOSITORY               TAG                 IMAGE ID            CREATED             SIZE
     auladocker              latest              d9e555c53008        3 minutes ago       195MB
-    cajahyba/auladocker     part2               d9e555c53008        3 minutes ago       195MB
+    cajahyba/auladocker     aula2               d9e555c53008        3 minutes ago       195MB
     python                  2.7-slim            1c7128a655f6        5 days ago          183MB
     
 
@@ -52,7 +52,7 @@ Exemplo:
 
     $ docker push cajahyba/auladocker:aula2
     Unable to find image 'cajahyba/auladocker:aula2' locally
-    part2: Pulling from cajahyba/auladocker
+    aula2: Pulling from cajahyba/auladocker
     10a267c67f42: Already exists
     f68a39a6a5e4: Already exists
     9beaffc0cf19: Already exists
@@ -61,7 +61,7 @@ Exemplo:
     ee7d8f576a14: Already exists
     fbccdcced46e: Already exists
     Digest: sha256:0601c866aab2adcc6498200efd0f754037e909e5fd42069adeff72d1e2439068
-    Status: Downloaded newer image for gordon/get-started:part2
+    Status: Downloaded newer image for gordon/get-started:aula2
     * Running on http://0.0.0.0:80/ (Press CTRL+C to quit)
 
 
