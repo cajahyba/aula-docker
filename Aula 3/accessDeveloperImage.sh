@@ -4,10 +4,9 @@
 
 docker run \
         -ti \
-        --rm \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $(pwd):/home/developer \
+        -v $PWD:/home/developer \
         --privileged \
         --device /dev/ttyUSB0 \
         --device /dev/ttyUSB1 \
@@ -18,4 +17,4 @@ docker run \
         --device /dev/ttyUSB6 \
         --device /dev/ttyUSB7 \
         -v /dev/bus/usb:/dev/bus/usb \
-        developer:base bash
+        developer:base /bin/bash

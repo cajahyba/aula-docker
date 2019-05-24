@@ -1,10 +1,12 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 # Needed to be able to install resolvconf without complaints about /etc/resolv.conf not being accessible
 # See: https://github.com/moby/moby/issues/1297#issuecomment-115458690
 RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
 #       tzdata \
 
+ENV TZ=America/Bahia
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update \
     && apt-get install -y \
