@@ -1,0 +1,58 @@
+1a Equipe 
+
+Equipe 6,5
+
+Breno -> 2,2
+Bruno -> 2,3
+Lucas Eduardo -> 2,1
+Pedro Gustavo -> 2,3  
+
+
+
+A cloud é uma rede? Se é, qual a diferença da internet em si?
+Economia de espaço é a melhor justificativa?
+Nuvem privada você utiliza os serviços de outrem para sua própria empresa
+
+Sony e Microsoft firmaram acordos sobre a cloud
+Faltou deixar claro o significado da sigla SLA - Acordo de Nível de Serviço (ANS) ou  Service Level Agreement)
+Faltou falar de cloud geodistribuída -> OK
+
+Amazon S3 - Simple Storage Service
+
+Faltaram exemplos dos tipos de IAAS, PAAS e SAAS
+
+Falou de exemplos de SAAS
+
+Google, Microsoft e Amazon estão buscando criar um padrão para migração de dados entre serviços
+
+Eu discordo que as tecnologias de cloud não evoloem tão rapidamente quanto RA e RV, a questão é que ela não aparece
+
+
+2a Equipe
+
+6,7
+
+Equipe
+Bruna -> Estudou bastante -> 2,7
+Gabriel -> não estudou - 1,5
+Leonardo -> 2,5
+Tárcio -> 2,1
+
+Ao referenciar Sergio Mainetti, fica parecendo que não estamos voltando a ter exatamente o contexto de trazer de volta um supercomputador
+
+O Middleware busca abstrair os processo e evitar erros de mudanças de contexto
+
+JSON pode ser considerado um objeto distribuído
+Um serviço remoto como webservice pode ser considerado um objeto distribuído?
+Gostei da parte de abstração de dados -> responde ao JSON
+
+Todos os exemplos as principais preocupações são com objetos stateful
+
+OSGI não é bem isso
+
+Qual a diferença entre OSGI e um Middleware padrão de corba ou rmi
+
+
+
+
+

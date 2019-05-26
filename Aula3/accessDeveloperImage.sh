@@ -1,12 +1,12 @@
 #!/bin/bash
 # -v /usr/lib/nvidia-${NVIDIA_DRIVER_VERSION}:/usr/lib/nvidia-${NVIDIA_DRIVER_VERSION} \
 # -e LD_LIBRARY_PATH=/usr/lib/nvidia-${NVIDIA_DRIVER_VERSION} \
-
+$PWD = $pwd
 docker run \
         -ti \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v $PWD:/home/developer \
+        -v "$PWD":/home/developer \
         --privileged \
         --device /dev/ttyUSB0 \
         --device /dev/ttyUSB1 \
